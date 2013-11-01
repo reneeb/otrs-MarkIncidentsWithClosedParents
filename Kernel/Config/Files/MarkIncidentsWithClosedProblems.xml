@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<otrs_config version="1.0" init="Config">
+    <CVS>$Id: MarkIncidentsWithClosedProblems.xml,v 1.55 2011/08/24 08:42:06 ud Exp $</CVS>
+    <ConfigItem Name="MarkIncidentsWithClosedProblems::Color" Required="0" Valid="1">
+        <Description Translatable="1">Hightlighting Color for incidents.</Description>
+        <Group>MarkIncidentsWithClosedProblems</Group>
+        <SubGroup>Core</SubGroup>
+        <Setting>
+            <String Regex="^[a-fA-F0-9]{6}"></String>
+        </Setting>
+    </ConfigItem>
+</otrs_config>
