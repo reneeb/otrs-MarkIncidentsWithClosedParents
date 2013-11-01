@@ -23,7 +23,7 @@
         {
             "type": "Install",
             "version": 0,
-            "text": "This module needs these add ons installed:<br /><br /><ul><li>TicketOverviewHooked (3.2.1)</li></ul><br /><br />To activate this feature, you have to add 'Kernel::System::TicketOverview::Hooks::MarkIncidentsWithClosedProblems' to the SysConfig option 'Ticket::Hooks'"
+            "text": "This module needs these add ons installed:<br /><br /><ul><li>TicketOverviewHooked (>= 3.1.2)</li></ul><br /><br />To activate this feature, you have to add 'Kernel::System::TicketOverview::Hooks::MarkIncidentsWithClosedProblems' to the SysConfig option 'Ticket::Hooks'"
         }
     ]
 }

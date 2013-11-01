@@ -15,11 +15,10 @@
         <File Permission="644" Location="Custom/Kernel/System/TicketOverview/Hooks/MarkIncidentsWithClosedProblems.pm" />
         <File Permission="644" Location="Custom/Kernel/System/TicketUtilsMIWCP.pm" />
         <File Permission="644" Location="Kernel/Config/Files/MarkIncidentsWithClosedProblems.xml" />
-        <File Permission="644" Location="NotifyIncidentsOnClosedProblems.sopm" />
-        <File Permission="644" Location="doc/NotifyIncidentsOnClosedProblems.json" />
+        <File Permission="644" Location="doc/MarkIncidentsWithClosedProblems.json" />
     </Filelist>
     <IntroInstall Type="post"><![CDATA[
-            This module needs these add ons installed:<br /><br /><ul><li>TicketOverviewHooked (3.2.1)</li></ul><br /><br />To activate this feature, you have to add 'Kernel::System::TicketOverview::Hooks::MarkIncidentsWithClosedProblems' to the SysConfig option 'Ticket::Hooks'
+            This module needs these add ons installed:<br /><br /><ul><li>TicketOverviewHooked (>= 3.1.2)</li></ul><br /><br />To activate this feature, you have to add 'Kernel::System::TicketOverview::Hooks::MarkIncidentsWithClosedProblems' to the SysConfig option 'Ticket::Hooks'
         ]]></IntroInstall>
     
 </otrs_package>
