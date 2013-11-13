@@ -9,4 +9,14 @@
             <String Regex="^[a-fA-F0-9]{6}"></String>
         </Setting>
     </ConfigItem>
+    <ConfigItem Name="MarkIncidentsWithClosedProblems::IncidentType" Required="0" Valid="1">
+        <Description Translatable="1">Ticket types that is a incident (* is a wildcard, so "Incident*" matches "Incident", "Incident::Error", ...).</Description>
+        <Group>MarkIncidentsWithClosedProblems</Group>
+        <SubGroup>Core</SubGroup>
+        <Setting>
+            <Array>
+                <Item>Incident*</Item>
+            </Array>
+        </Setting>
+    </ConfigItem>
 </otrs_config>

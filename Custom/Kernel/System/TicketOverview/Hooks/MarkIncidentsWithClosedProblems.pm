@@ -112,7 +112,22 @@ sub Run {
         }
     }
 
-    return if $Param{Type} !~ m{\AIncident}xms;
+    my @IncidentTypes = @{ $Self->{ConfigObject}->Get( 'MarkIncidentsWithClosedProblems::IncidentType' ) || [] };
+    my $IsType;
+
+    for my $Type ( @IncidentTypes ) {
+        my $HasWildcard = $Type =~ m{\*};
+
+        if ( $HasWildcard ) {
+            $Type =~ s{\*}{.*}g;
+            $IsType = 1 if $Param{Type} =~ m{\A$Type}ms;
+        }
+        else {
+            $IsType = 1 if $ChildData{Type} eq $Type;
+        }
+    }
+
+    return if !$IsType;
 
     my $LinkList = $Self->{LinkObject}->LinkList(
         Object  => 'Ticket',
