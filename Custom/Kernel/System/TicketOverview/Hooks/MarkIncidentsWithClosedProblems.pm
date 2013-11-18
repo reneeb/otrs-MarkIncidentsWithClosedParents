@@ -16,7 +16,7 @@ use Kernel::System::LinkObject;
 use Kernel::System::Ticket;
 use Kernel::System::TicketUtilsMIWCP;
 
-our $VERSION = 0.01;
+our $VERSION = 0.04;
 
 =head1 NAME
 
@@ -129,13 +129,18 @@ sub Run {
 
     return if !$IsType;
 
+    my %Opts;
+    if ( !$Self->{ConfigObject}->Get('MarkIncidentsWithClosedProblems::AllRelationships') ) {
+        $Opts{Type} = 'ParentChild';
+    }
+
     my $LinkList = $Self->{LinkObject}->LinkList(
         Object  => 'Ticket',
         Key     => $Param{TicketID},
         Object2 => 'Ticket',
-        Type    => 'ParentChild',
         UserID  => 1,
         State   => 'Valid',
+        %Opts,
     );
 
     return if !$LinkList;
@@ -144,19 +149,33 @@ sub Run {
 
     return if !$LinkedTickets;
 
-    my $ParentChilds = $LinkedTickets->{ParentChild};
+    my %TicketIDs;
 
-    return if !$ParentChilds;
+    TYPE:
+    for my $Type ( keys %{$LinkedTickets} ) {
 
-    my $PossibleProblems = $ParentChilds->{Target};
+        my $RelatedByType = $LinkedTickets->{$Type};
 
-    return if !$PossibleProblems;
+        next TYPE if !$RelatedByType;
 
-    my @TicketIDs         = keys %{ $PossibleProblems };
+        DIRECTION:
+        for my $Direction ( qw/Source Target/ ) {
+
+            my $PossibleIncidents = $RelatedByType->{$Direction};
+
+            next DIRECTION if !$PossibleIncidents;
+
+            my @FoundTicketIDs = keys %{ $PossibleIncidents };
+            @TicketIDs{@FoundTicketIDs} = (1) x @FoundTicketIDs;
+        }
+    }
+
+    my @TicketIDs         = keys %TicketIDs;
     my $HasClosedProblems = $Self->{UtilsObject}->CheckClosedProblems( TicketIDs => \@TicketIDs );
 
-    my $Color = $Self->{ConfigObject}->Get('MarkIncidentsWithClosedProblems::Color') || '';
+    return if !$HasClosedProblems;
 
+    my $Color = $Self->{ConfigObject}->Get('MarkIncidentsWithClosedProblems::Color') || '';
     return $Color;
 }
 

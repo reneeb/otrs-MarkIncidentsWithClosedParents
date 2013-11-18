@@ -19,4 +19,15 @@
             </Array>
         </Setting>
     </ConfigItem>
+    <ConfigItem Name="MarkIncidentsWithClosedProblems::AllRelationships" Required="0" Valid="1">
+        <Description Translatable="1">Adds last article of problem to all related incidents (not only those related as parent - child).</Description>
+        <Group>NotifyIncidentsOnClosedProblems</Group>
+        <SubGroup>Core</SubGroup>
+        <Setting>
+            <Option SelectedID="1">
+                <Item Key="0">no</Item>
+                <Item Key="1">yes</Item>
+            </Option>
+        </Setting>
+    </ConfigItem>
 </otrs_config>
