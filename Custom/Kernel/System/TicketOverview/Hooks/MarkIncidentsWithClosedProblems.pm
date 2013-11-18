@@ -123,7 +123,7 @@ sub Run {
             $IsType = 1 if $Param{Type} =~ m{\A$Type}ms;
         }
         else {
-            $IsType = 1 if $ChildData{Type} eq $Type;
+            $IsType = 1 if $Param{Type} eq $Type;
         }
     }
 
