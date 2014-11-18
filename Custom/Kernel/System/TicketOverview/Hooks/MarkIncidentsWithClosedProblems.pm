@@ -1,6 +1,6 @@
 # --
-# Kernel/System/TicketOverview/Hooks/MarkIncidentsWithClosedProblems.pm - mark tickets based on the queue in ticket overview
-# Copyright (C) 2013 Perl-Services.de, http://perl-services.de
+# Kernel/System/TicketOverview/Hooks/MarkIncidentsWithClosedProblems.pm - mark tickets that have closed parents in ticket overview
+# Copyright (C) 2013 - 2014 Perl-Services.de, http://perl-services.de
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (AGPL). If you
@@ -12,15 +12,17 @@ package Kernel::System::TicketOverview::Hooks::MarkIncidentsWithClosedProblems;
 use strict;
 use warnings;
 
-use Kernel::System::LinkObject;
-use Kernel::System::Ticket;
-use Kernel::System::TicketUtilsMIWCP;
-
 our $VERSION = 0.04;
+
+our @ObjectDependencies = qw(
+    Kernel::System::LinkObject
+    Kernel::System::Log
+    Kernel::System::TicketUtilsMIWCP
+);
 
 =head1 NAME
 
-Kernel::System::TicketOverview::Hooks::Junk - mark junk tickets in ticket overview
+Kernel::System::TicketOverview::Hooks::MarkIncidentsWithClosedProblems - mark tickets in ticket overview that have closed parents
 
 =head1 PUBLIC INTERFACE
 
@@ -32,40 +34,6 @@ Kernel::System::TicketOverview::Hooks::Junk - mark junk tickets in ticket overvi
 
 create an object
 
-    use Kernel::Config;
-    use Kernel::System::Encode;
-    use Kernel::System::Log;
-    use Kernel::System::Main;
-    use Kernel::System::DB;
-    use Kernel::System::TicketOverview::Hooks::Junk;
-
-    my $ConfigObject = Kernel::Config->new();
-    my $EncodeObject = Kernel::System::Encode->new(
-        ConfigObject => $ConfigObject,
-    );
-    my $LogObject = Kernel::System::Log->new(
-        ConfigObject => $ConfigObject,
-        EncodeObject => $EncodeObject,
-    );
-    my $MainObject = Kernel::System::Main->new(
-        ConfigObject => $ConfigObject,
-        EncodeObject => $EncodeObject,
-        LogObject    => $LogObject,
-    );
-    my $DBObject = Kernel::System::DB->new(
-        ConfigObject => $ConfigObject,
-        EncodeObject => $EncodeObject,
-        LogObject    => $LogObject,
-        MainObject   => $MainObject,
-    );
-    my $JunkObject = Kernel::System::TicketOverview::Hooks::Junk->new(
-        ConfigObject => $ConfigObject,
-        LogObject    => $LogObject,
-        DBObject     => $DBObject,
-        MainObject   => $MainObject,
-        EncodeObject => $EncodeObject,
-    );
-
 =cut
 
 sub new {
@@ -74,16 +42,6 @@ sub new {
     # allocate new hash for object
     my $Self = {};
     bless( $Self, $Type );
-
-    # check needed objects
-    for my $Object (qw(DBObject ConfigObject MainObject LogObject EncodeObject TimeObject)) {
-        $Self->{$Object} = $Param{$Object} || die "Got no $Object!";
-    }
-    
-    # create needed objects
-    $Self->{TicketObject} = Kernel::System::Ticket->new( %{$Self} );
-    $Self->{UtilsObject}  = Kernel::System::TicketUtilsMIWCP->new( %{$Self} );
-    $Self->{LinkObject}   = Kernel::System::LinkObject->new( %{$Self} );
 
     return $Self;
 }
@@ -101,10 +59,15 @@ Returns a color when the ticket belongs to the Junk-Queue
 sub Run {
     my ( $Self, %Param ) = @_;
 
+    my $UtilsObject  = $Kernel::OM->Get('Kernel::System::TicketUtilsMIWCP');
+    my $LogObject    = $Kernel::OM->Get('Kernel::System::Log');
+    my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
+    my $LinkObject   = $Kernel::OM->Get('Kernel::System::LinkObject');
+
     # check needed stuff
     for my $Needed (qw(TicketID Type)) {
         if ( !$Param{$Needed} ) {
-            $Self->{LogObject}->Log(
+            $LogObject->Log(
                 Priority => 'error',
                 Message  => "Need $Needed!",
             );
@@ -112,7 +75,7 @@ sub Run {
         }
     }
 
-    my @IncidentTypes = @{ $Self->{ConfigObject}->Get( 'MarkIncidentsWithClosedProblems::IncidentType' ) || [] };
+    my @IncidentTypes = @{ $ConfigObject->Get( 'MarkIncidentsWithClosedProblems::IncidentType' ) || [] };
     my $IsType;
 
     for my $Type ( @IncidentTypes ) {
@@ -130,11 +93,11 @@ sub Run {
     return if !$IsType;
 
     my %Opts;
-    if ( !$Self->{ConfigObject}->Get('MarkIncidentsWithClosedProblems::AllRelationships') ) {
+    if ( !$ConfigObject->Get('MarkIncidentsWithClosedProblems::AllRelationships') ) {
         $Opts{Type} = 'ParentChild';
     }
 
-    my $LinkList = $Self->{LinkObject}->LinkList(
+    my $LinkList = $LinkObject->LinkList(
         Object  => 'Ticket',
         Key     => $Param{TicketID},
         Object2 => 'Ticket',
@@ -171,11 +134,11 @@ sub Run {
     }
 
     my @TicketIDs         = keys %TicketIDs;
-    my $HasClosedProblems = $Self->{UtilsObject}->CheckClosedProblems( TicketIDs => \@TicketIDs );
+    my $HasClosedProblems = $UtilsObject->CheckClosedProblems( TicketIDs => \@TicketIDs );
 
     return if !$HasClosedProblems;
 
-    my $Color = $Self->{ConfigObject}->Get('MarkIncidentsWithClosedProblems::Color') || '';
+    my $Color = $ConfigObject->Get('MarkIncidentsWithClosedProblems::Color') || '';
     return $Color;
 }
 
