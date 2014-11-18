@@ -1,6 +1,6 @@
 # --
-# Kernel/System/TicketMIWCP.pm - all ticket functions
-# Copyright (C) 2013 Perl-Services.de, http://perl-services.de
+# Kernel/System/TicketUtilsMIWCP.pm - all ticket functions
+# Copyright (C) 2013 - 2014 Perl-Services.de, http://perl-services.de
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (AGPL). If you
@@ -12,6 +12,13 @@ package Kernel::System::TicketUtilsMIWCP;
 use strict;
 use warnings;
 
+our $VERSION = 0.02;
+
+our @ObjectDependencies = qw(
+    Kernel::System::Log
+    Kernel::System::DB
+);
+
 sub new {
     my ( $Type, %Param ) = @_;
 
@@ -19,25 +26,18 @@ sub new {
     my $Self = {};
     bless( $Self, $Type );
 
-    # get needed objects
-    for my $Needed (qw(ConfigObject LogObject TimeObject DBObject MainObject EncodeObject)) {
-        if ( $Param{$Needed} ) {
-            $Self->{$Needed} = $Param{$Needed};
-        }
-        else {
-            die "Got no $Needed!";
-        }
-    }
-
     return $Self;
 }
 
 sub CheckClosedProblems {
     my ($Self, %Param) = @_;
 
+    my $LogObject = $Kernel::OM->Get('Kernel::System::Log');
+    my $DBObject  = $Kernel::OM->Get('Kernel::System::DB');
+
     for my $Needed ( qw/TicketIDs/ ) {
         if ( !$Param{$Needed} ) {
-            $Self->{LogObject}->Log(
+            $LogObject->Log(
                 Priority => 'error',
                 Message  => "Need $Needed!",
             );
@@ -53,7 +53,7 @@ sub CheckClosedProblems {
                    INNER JOIN ticket_state_type tst ON ts.type_id = tst.id
                    WHERE t.id IN( ' . $Binds . ') AND tt.name LIKE "Problem%" AND tst.name = "closed"';
 
-    return if !$Self->{DBObject}->Prepare(
+    return if !$DBObject->Prepare(
         SQL   => $SQL,
         Bind  =>[  map{ \$_ }@{ $Param{TicketIDs} } ],
         Limit => 1,
@@ -61,7 +61,7 @@ sub CheckClosedProblems {
 
     my $HasClosedProblems;
 
-    while ( my @Row = $Self->{DBObject}->FetchrowArray() ) {
+    while ( my @Row = $DBObject->FetchrowArray() ) {
         $HasClosedProblems++;
     }
 
