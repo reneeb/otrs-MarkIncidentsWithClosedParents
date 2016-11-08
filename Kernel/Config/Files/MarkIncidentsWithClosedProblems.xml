@@ -19,6 +19,16 @@
             </Array>
         </Setting>
     </ConfigItem>
+    <ConfigItem Name="MarkIncidentsWithClosedProblems::ProblemType" Required="0" Valid="1">
+        <Description Translatable="1">Ticket types that is a problem (* is a wildcard, so "Problem*" matches "Problem", "Problem::Error", ...).</Description>
+        <Group>MarkIncidentsWithClosedProblems</Group>
+        <SubGroup>Core</SubGroup>
+        <Setting>
+            <Array>
+                <Item>Problem</Item>
+            </Array>
+        </Setting>
+    </ConfigItem>
     <ConfigItem Name="MarkIncidentsWithClosedProblems::AllRelationships" Required="0" Valid="1">
         <Description Translatable="1">Adds last article of problem to all related incidents (not only those related as parent - child).</Description>
         <Group>MarkIncidentsWithClosedProblems</Group>

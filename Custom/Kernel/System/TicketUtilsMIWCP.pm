@@ -1,6 +1,6 @@
 # --
 # Kernel/System/TicketUtilsMIWCP.pm - all ticket functions
-# Copyright (C) 2013 - 2014 Perl-Services.de, http://perl-services.de
+# Copyright (C) 2013 - 2016 Perl-Services.de, http://perl-services.de
 # --
 # This software comes with ABSOLUTELY NO WARRANTY. For details, see
 # the enclosed file COPYING for license information (AGPL). If you
@@ -12,11 +12,10 @@ package Kernel::System::TicketUtilsMIWCP;
 use strict;
 use warnings;
 
-our $VERSION = 0.02;
-
 our @ObjectDependencies = qw(
     Kernel::System::Log
     Kernel::System::DB
+    Kernel::Config
 );
 
 sub new {
@@ -32,8 +31,9 @@ sub new {
 sub CheckClosedProblems {
     my ($Self, %Param) = @_;
 
-    my $LogObject = $Kernel::OM->Get('Kernel::System::Log');
-    my $DBObject  = $Kernel::OM->Get('Kernel::System::DB');
+    my $LogObject    = $Kernel::OM->Get('Kernel::System::Log');
+    my $DBObject     = $Kernel::OM->Get('Kernel::System::DB');
+    my $ConfigObject = $Kernel::OM->Get('Kernel::Config');
 
     for my $Needed ( qw/TicketIDs/ ) {
         if ( !$Param{$Needed} ) {
@@ -46,12 +46,22 @@ sub CheckClosedProblems {
         }
     }
 
+    my @ProblemTypes = @{ $ConfigObject->Get( 'MarkIncidentsWithClosedProblems::ProblemType' ) || [] };
+    my @Types;
+    for my $Type ( @ProblemTypes ) {
+        $Type =~ s/\*/%/g;
+
+        push @Types, qq~ tt.name LIKE "$Type"~;
+    }
+
+    my $Placeholder = sprintf "( %s )", join ' OR ', @Types;
+
     my $Binds = join ', ', ('?') x @{ $Param{TicketIDs} };
     my $SQL = 'SELECT t.id, tt.name, tst.name FROM ticket t 
                    INNER JOIN ticket_type tt ON t.type_id = tt.id
                    INNER JOIN ticket_state ts ON ts.id = t.ticket_state_id
                    INNER JOIN ticket_state_type tst ON ts.type_id = tst.id
-                   WHERE t.id IN( ' . $Binds . ') AND tt.name LIKE "Problem%" AND tst.name = "closed"';
+                   WHERE t.id IN( ' . $Binds . ') AND ' . $Placeholder . ' AND tst.name = "closed"';
 
     return if !$DBObject->Prepare(
         SQL   => $SQL,
